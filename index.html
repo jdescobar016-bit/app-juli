@@ -122,6 +122,22 @@ body{
 .client-btn .ds{font-size:12px; color:var(--text-muted); margin-top:2px;}
 
 .section-title{font-family:'Sora',sans-serif; font-weight:700; font-size:15px; margin:22px 0 6px;}
+.chart-card{background:var(--surface-alt); border-radius:var(--radius-md); padding:18px 16px;}
+.donut-wrap{position:relative; width:148px; height:148px; margin:4px auto 20px;}
+.donut{width:100%; height:100%; display:block;}
+.donut-bg{stroke:var(--border);}
+.donut-seg{transition:stroke-dasharray .2s ease;}
+.donut-center{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;}
+.donut-total-label{font-size:10.5px; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:.05em;}
+.donut-total-value{font-family:'Sora',sans-serif; font-weight:800; font-size:19px; margin-top:3px;}
+.chart-legend{display:flex; flex-direction:column; gap:0;}
+.chart-legend-row{display:flex; align-items:center; gap:9px; padding:9px 0; border-bottom:1px solid var(--border);}
+.chart-legend-row:last-child{border-bottom:none; padding-bottom:0;}
+.chart-legend-row:first-child{padding-top:0;}
+.chart-legend-row .dot{width:10px; height:10px; border-radius:50%; flex-shrink:0;}
+.chart-legend-row .name{flex:1; font-size:13.5px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.chart-legend-row .pct{color:var(--text-muted); font-size:12px; width:32px; text-align:right; flex-shrink:0;}
+.chart-legend-row .amt{font-weight:700; font-size:13px; width:88px; text-align:right; flex-shrink:0; font-variant-numeric:tabular-nums;}
 
 .tx-list{display:flex; flex-direction:column;}
 .date-heading{font-size:11px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:.06em; margin:18px 0 6px;}
@@ -438,6 +454,8 @@ body{
       + '</div>';
     html += '<div class="'+restCls+'"><div class="stat-label">Restante de la quincena</div><div class="stat-value">'+fmtCOP(totals.restante)+'</div></div>';
 
+    html += expenseChartCard(key);
+
     html += '<button type="button" class="client-btn" data-action="open-client-income">'
       + '<span class="ic">'+CLIENT_ICON+'</span>'
       + '<span><span class="tt">Registrar ingreso por clientes</span><span class="ds" style="display:block;">Calcula el total según cuántos clientes tienes activos</span></span>'
@@ -452,6 +470,57 @@ body{
       html += '</div>';
       html += '<button class="link-btn" data-action="goto-movimientos">Ver todos los movimientos</button>';
     }
+    return html;
+  }
+
+  function expenseChartCard(key){
+    var byCat = {};
+    state.transactions.forEach(function(t){
+      if(t.type!=='expense' || !txInQuincena(t,key)) return;
+      byCat[t.category] = (byCat[t.category]||0) + t.amount;
+    });
+    var cats = Object.keys(byCat);
+    if(cats.length===0) return '';
+    cats.sort(function(a,b){ return byCat[b]-byCat[a]; });
+    var total = cats.reduce(function(s,c){ return s+byCat[c]; }, 0);
+
+    var r = 50, cx = 60, cy = 60, sw = 14;
+    var circumference = 2 * Math.PI * r;
+    var offset = 0;
+    var segments = '';
+    cats.forEach(function(c){
+      var color = CAT_COLORS[c] || '#5C6A64';
+      var frac = total>0 ? byCat[c]/total : 0;
+      var segLen = frac * circumference;
+      segments += '<circle class="donut-seg" cx="'+cx+'" cy="'+cy+'" r="'+r+'" stroke-width="'+sw+'" fill="none" stroke="'+color+'" '
+        + 'stroke-dasharray="'+segLen.toFixed(2)+' '+(circumference-segLen).toFixed(2)+'" '
+        + 'stroke-dashoffset="'+(-offset).toFixed(2)+'"></circle>';
+      offset += segLen;
+    });
+
+    var html = '<div class="section-title">Gastos por categoría</div>';
+    html += '<div class="chart-card">';
+    html += '<div class="donut-wrap">'
+      + '<svg class="donut" viewBox="0 0 120 120">'
+        + '<circle class="donut-bg" cx="'+cx+'" cy="'+cy+'" r="'+r+'" stroke-width="'+sw+'" fill="none"></circle>'
+        + '<g transform="rotate(-90 '+cx+' '+cy+')">'+segments+'</g>'
+      + '</svg>'
+      + '<div class="donut-center"><div class="donut-total-label">Total gastado</div><div class="donut-total-value">'+fmtCOP(total)+'</div></div>'
+    + '</div>';
+    html += '<div class="chart-legend">';
+    cats.forEach(function(c){
+      var amount = byCat[c];
+      var color = CAT_COLORS[c] || '#5C6A64';
+      var pct = total>0 ? Math.round(amount/total*100) : 0;
+      html += '<div class="chart-legend-row">'
+        + '<span class="dot" style="background:'+color+'"></span>'
+        + '<span class="name">'+escapeHTML(c)+'</span>'
+        + '<span class="pct">'+pct+'%</span>'
+        + '<span class="amt">'+fmtCOP(amount)+'</span>'
+      + '</div>';
+    });
+    html += '</div>';
+    html += '</div>';
     return html;
   }
 
