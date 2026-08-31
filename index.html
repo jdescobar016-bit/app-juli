@@ -20,6 +20,9 @@
   --accent:#1F6F5C; --accent-contrast:#FFFFFF;
   --income:#2E8B57; --expense:#B23A48;
   --radius-lg:32px; --radius-md:16px;
+  --series-1:#2a78d6; --series-2:#eb6834; --series-3:#1baf7a; --series-4:#eda100;
+  --series-5:#e87ba4; --series-6:#008300; --series-7:#4a3aa7; --series-8:#e34948;
+  --series-otros:#898781;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
@@ -27,6 +30,9 @@
     --text:#E7EDE9; --text-muted:#9AAAA2; --border:#2A3733;
     --accent:#4FBE9B; --accent-contrast:#08211B;
     --income:#55C285; --expense:#E0707A;
+    --series-1:#3987e5; --series-2:#d95926; --series-3:#199e70; --series-4:#c98500;
+    --series-5:#d55181; --series-6:#008300; --series-7:#9085e9; --series-8:#e66767;
+    --series-otros:#898781;
   }
 }
 :root[data-theme="dark"]{
@@ -34,6 +40,9 @@
   --text:#E7EDE9; --text-muted:#9AAAA2; --border:#2A3733;
   --accent:#4FBE9B; --accent-contrast:#08211B;
   --income:#55C285; --expense:#E0707A;
+  --series-1:#3987e5; --series-2:#d95926; --series-3:#199e70; --series-4:#c98500;
+  --series-5:#d55181; --series-6:#008300; --series-7:#9085e9; --series-8:#e66767;
+  --series-otros:#898781;
 }
 *{box-sizing:border-box;}
 html,body{margin:0;padding:0;}
@@ -123,21 +132,19 @@ body{
 
 .section-title{font-family:'Sora',sans-serif; font-weight:700; font-size:15px; margin:22px 0 6px;}
 .chart-card{background:var(--surface-alt); border-radius:var(--radius-md); padding:18px 16px;}
-.donut-wrap{position:relative; width:148px; height:148px; margin:4px auto 20px;}
-.donut{width:100%; height:100%; display:block;}
-.donut-bg{stroke:var(--border);}
-.donut-seg{transition:stroke-dasharray .2s ease;}
-.donut-center{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;}
-.donut-total-label{font-size:10.5px; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:.05em;}
-.donut-total-value{font-family:'Sora',sans-serif; font-weight:800; font-size:19px; margin-top:3px;}
-.chart-legend{display:flex; flex-direction:column; gap:0;}
-.chart-legend-row{display:flex; align-items:center; gap:9px; padding:9px 0; border-bottom:1px solid var(--border);}
-.chart-legend-row:last-child{border-bottom:none; padding-bottom:0;}
-.chart-legend-row:first-child{padding-top:0;}
-.chart-legend-row .dot{width:10px; height:10px; border-radius:50%; flex-shrink:0;}
-.chart-legend-row .name{flex:1; font-size:13.5px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
-.chart-legend-row .pct{color:var(--text-muted); font-size:12px; width:32px; text-align:right; flex-shrink:0;}
-.chart-legend-row .amt{font-weight:700; font-size:13px; width:88px; text-align:right; flex-shrink:0; font-variant-numeric:tabular-nums;}
+.chart-total-label{font-size:10.5px; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:.05em;}
+.chart-total-value{font-family:'Sora',sans-serif; font-weight:800; font-size:22px; margin-top:3px; margin-bottom:16px;}
+.stackbar{display:flex; gap:2px; width:100%; height:18px; border-radius:5px; overflow:hidden; background:var(--surface-alt); margin-bottom:18px;}
+.stackbar-seg{height:100%; flex-shrink:0;}
+.chart-list{display:flex; flex-direction:column; gap:0;}
+.chart-list-row{display:flex; align-items:center; gap:9px; padding:10px 0; border-bottom:1px solid var(--border);}
+.chart-list-row:last-child{border-bottom:none; padding-bottom:0;}
+.chart-list-row:first-child{padding-top:0;}
+.chart-list-row .dot{width:10px; height:10px; border-radius:50%; flex-shrink:0;}
+.chart-list-row .name{flex:1; font-size:13.5px; font-weight:600; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.chart-list-row .pct{color:var(--text-muted); font-size:12px; width:34px; text-align:right; flex-shrink:0;}
+.chart-list-row .amt{font-weight:700; font-size:13px; color:var(--text); width:92px; text-align:right; flex-shrink:0; font-variant-numeric:tabular-nums;}
+.chart-empty{color:var(--text-muted); font-size:13px; text-align:center; padding:20px 0;}
 
 .tx-list{display:flex; flex-direction:column;}
 .date-heading{font-size:11px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:.06em; margin:18px 0 6px;}
@@ -365,7 +372,8 @@ body{
     resumen: '<svg viewBox="0 0 24 24"><path d="M4 12 L12 4 L20 12"/><path d="M6 10 V20 H18 V10"/></svg>',
     movimientos: '<svg viewBox="0 0 24 24"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="14" y2="17"/></svg>',
     fijos: '<svg viewBox="0 0 24 24"><rect x="4" y="5" width="4" height="4" rx="1"/><path d="M11 7 H20"/><rect x="4" y="15" width="4" height="4" rx="1"/><path d="M11 17 H20"/></svg>',
-    deudas: '<svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10.5 H21"/><path d="M6 15 H10"/></svg>'
+    deudas: '<svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10.5 H21"/><path d="M6 15 H10"/></svg>',
+    graficas: '<svg viewBox="0 0 24 24"><path d="M4 20 V4"/><path d="M4 20 H20"/><rect x="7" y="12" width="3" height="6" rx="0.8"/><rect x="12" y="8" width="3" height="10" rx="0.8"/><rect x="17" y="14" width="3" height="4" rx="0.8"/></svg>'
   };
   var TRASH_ICON = '<svg viewBox="0 0 24 24"><path d="M5 7 H19"/><path d="M9 7 V4 H15 V7"/><path d="M7 7 L8 20 H16 L17 7"/></svg>';
   var CHECK_ICON = '<svg viewBox="0 0 24 24"><path d="M4 12 L9 17 L20 6"/></svg>';
@@ -376,6 +384,7 @@ body{
   var TABS = [
     {id:'resumen', label:'Resumen'},
     {id:'movimientos', label:'Movimientos'},
+    {id:'graficas', label:'Gráficas'},
     {id:'fijos', label:'Gastos fijos'},
     {id:'deudas', label:'Deudas'}
   ];
@@ -454,8 +463,6 @@ body{
       + '</div>';
     html += '<div class="'+restCls+'"><div class="stat-label">Restante de la quincena</div><div class="stat-value">'+fmtCOP(totals.restante)+'</div></div>';
 
-    html += expenseChartCard(key);
-
     html += '<button type="button" class="client-btn" data-action="open-client-income">'
       + '<span class="ic">'+CLIENT_ICON+'</span>'
       + '<span><span class="tt">Registrar ingreso por clientes</span><span class="ds" style="display:block;">Calcula el total según cuántos clientes tienes activos</span></span>'
@@ -473,47 +480,54 @@ body{
     return html;
   }
 
+  // Las primeras 8 categorías de gasto tienen su propio color fijo (identidad estable,
+  // validado para que se distingan incluso con daltonismo). Cualquier categoría fuera
+  // de esta lista (o "Otros") se agrupa bajo "Otros" con un gris neutro, para nunca
+  // inventar un noveno color que termine pareciéndose a otro.
+  var CHART_SLOTTED_CATS = EXPENSE_CATS.filter(function(c){ return c!=='Otros'; }).slice(0,8);
+  function catColorVar(cat){
+    var idx = CHART_SLOTTED_CATS.indexOf(cat);
+    return idx===-1 ? 'var(--series-otros)' : 'var(--series-'+(idx+1)+')';
+  }
+
   function expenseChartCard(key){
     var byCat = {};
     state.transactions.forEach(function(t){
       if(t.type!=='expense' || !txInQuincena(t,key)) return;
       byCat[t.category] = (byCat[t.category]||0) + t.amount;
     });
-    var cats = Object.keys(byCat);
-    if(cats.length===0) return '';
-    cats.sort(function(a,b){ return byCat[b]-byCat[a]; });
-    var total = cats.reduce(function(s,c){ return s+byCat[c]; }, 0);
+    var total = Object.keys(byCat).reduce(function(s,c){ return s+byCat[c]; }, 0);
+    if(total===0){
+      return '<div class="chart-card"><div class="chart-empty">Sin gastos registrados en esta quincena todavía.</div></div>';
+    }
 
-    var r = 50, cx = 60, cy = 60, sw = 14;
-    var circumference = 2 * Math.PI * r;
-    var offset = 0;
-    var segments = '';
-    cats.forEach(function(c){
-      var color = CAT_COLORS[c] || '#5C6A64';
-      var frac = total>0 ? byCat[c]/total : 0;
-      var segLen = frac * circumference;
-      segments += '<circle class="donut-seg" cx="'+cx+'" cy="'+cy+'" r="'+r+'" stroke-width="'+sw+'" fill="none" stroke="'+color+'" '
-        + 'stroke-dasharray="'+segLen.toFixed(2)+' '+(circumference-segLen).toFixed(2)+'" '
-        + 'stroke-dashoffset="'+(-offset).toFixed(2)+'"></circle>';
-      offset += segLen;
+    // Agrupar todo lo que no tiene slot propio dentro de "Otros"
+    var grouped = {};
+    Object.keys(byCat).forEach(function(c){
+      var key2 = CHART_SLOTTED_CATS.indexOf(c)!==-1 ? c : 'Otros';
+      grouped[key2] = (grouped[key2]||0) + byCat[c];
     });
+    var cats = Object.keys(grouped).filter(function(c){ return c!=='Otros'; });
+    cats.sort(function(a,b){ return grouped[b]-grouped[a]; });
+    if(grouped['Otros']) cats.push('Otros');
 
-    var html = '<div class="section-title">Gastos por categoría</div>';
-    html += '<div class="chart-card">';
-    html += '<div class="donut-wrap">'
-      + '<svg class="donut" viewBox="0 0 120 120">'
-        + '<circle class="donut-bg" cx="'+cx+'" cy="'+cy+'" r="'+r+'" stroke-width="'+sw+'" fill="none"></circle>'
-        + '<g transform="rotate(-90 '+cx+' '+cy+')">'+segments+'</g>'
-      + '</svg>'
-      + '<div class="donut-center"><div class="donut-total-label">Total gastado</div><div class="donut-total-value">'+fmtCOP(total)+'</div></div>'
-    + '</div>';
-    html += '<div class="chart-legend">';
+    var html = '<div class="chart-card">';
+    html += '<div class="chart-total-label">Total gastado en la quincena</div>';
+    html += '<div class="chart-total-value">'+fmtCOP(total)+'</div>';
+
+    html += '<div class="stackbar">';
     cats.forEach(function(c){
-      var amount = byCat[c];
-      var color = CAT_COLORS[c] || '#5C6A64';
-      var pct = total>0 ? Math.round(amount/total*100) : 0;
-      html += '<div class="chart-legend-row">'
-        + '<span class="dot" style="background:'+color+'"></span>'
+      var widthPct = (grouped[c]/total*100).toFixed(2);
+      html += '<div class="stackbar-seg" style="width:'+widthPct+'%; background:'+catColorVar(c)+';"></div>';
+    });
+    html += '</div>';
+
+    html += '<div class="chart-list">';
+    cats.forEach(function(c){
+      var amount = grouped[c];
+      var pct = Math.round(amount/total*100);
+      html += '<div class="chart-list-row">'
+        + '<span class="dot" style="background:'+catColorVar(c)+'"></span>'
         + '<span class="name">'+escapeHTML(c)+'</span>'
         + '<span class="pct">'+pct+'%</span>'
         + '<span class="amt">'+fmtCOP(amount)+'</span>'
@@ -521,6 +535,18 @@ body{
     });
     html += '</div>';
     html += '</div>';
+    return html;
+  }
+
+  function graficasContent(){
+    var key = viewingQuincena || currentQuincenaKey();
+    var html = '<div class="quincena-nav">'
+      + '<button type="button" class="qnav-btn" data-action="q-prev">'+CHEVRON_L+'</button>'
+      + '<div class="qnav-label">'+quincenaLabel(key)+'</div>'
+      + '<button type="button" class="qnav-btn" data-action="q-next">'+CHEVRON_R+'</button>'
+      + '</div>';
+    html += '<div class="section-title" style="margin-top:14px;">Gastos por categoría</div>';
+    html += expenseChartCard(key);
     return html;
   }
 
@@ -603,6 +629,7 @@ body{
   function viewContent(id){
     if(id==='resumen') return resumenContent();
     if(id==='movimientos') return movimientosContent();
+    if(id==='graficas') return graficasContent();
     if(id==='fijos') return fijosContent();
     if(id==='deudas') return deudasContent();
     return '';
