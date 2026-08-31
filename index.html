@@ -174,16 +174,6 @@ body{
 .debt-actions .mini-btn{flex:1; text-align:center; padding:9px;}
 .debt-actions .mini-btn.primary{background:var(--accent); color:var(--accent-contrast); border-color:var(--accent);}
 
-.proj-card{background:var(--surface-alt); border-radius:var(--radius-md); padding:16px; margin-top:8px;}
-.proj-row{display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border); font-size:13.5px;}
-.proj-input-row{display:flex; align-items:center; gap:10px; margin:10px 0 4px;}
-.proj-stepper{display:flex; align-items:center; gap:8px;}
-.proj-stepper button{width:32px; height:32px; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:16px; cursor:pointer; font-family:'Work Sans',sans-serif;}
-.proj-stepper input{width:56px; text-align:center; border:1px solid var(--border); border-radius:8px; padding:6px; font-family:'Sora',sans-serif; font-weight:700; font-size:15px; background:var(--surface); color:var(--text);}
-.proj-debt-toggle{display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border);}
-.proj-total{display:flex; justify-content:space-between; align-items:center; margin-top:10px; padding-top:12px; border-top:1px solid var(--border);}
-.proj-total .lbl{font-weight:600; font-size:13.5px;}
-.proj-total .val{font-family:'Sora',sans-serif; font-weight:800; font-size:20px;}
 
 .add-btn{
   width:100%; background:none; border:1px dashed var(--border); color:var(--accent);
@@ -290,8 +280,6 @@ body{
   var modalType = 'expense';
   var selectedCategory = null;
   var editingTxId = null;
-  var projClientes = null;      // proyección: null = usar state.lastClientCount
-  var projDebtSelected = {};    // proyección: id -> true/false (por defecto, todas incluidas)
   var quickSheet = null;      // {title, fields:[...], onSave(values)}
   var viewingQuincena = null; // set on first render
 
@@ -464,42 +452,6 @@ body{
       html += '</div>';
       html += '<button class="link-btn" data-action="goto-movimientos">Ver todos los movimientos</button>';
     }
-    html += projectionCard();
-    return html;
-  }
-
-  function projectionCard(){
-    var nextKey = shiftQuincenaKey(currentQuincenaKey(), 1);
-    var fixedItems = state.fixedExpenses.filter(function(i){ return fixedAppliesTo(i, nextKey); });
-    var fixedTotal = fixedItems.reduce(function(s,i){ return s+i.amount; }, 0);
-    var clientes = projClientes==null ? (state.lastClientCount||0) : projClientes;
-    var ingreso = Math.round(clientes * (state.clientRate/2));
-    var debtsWithCuota = state.debts.filter(function(d){ return d.cuota>0; });
-    var debtsTotal = debtsWithCuota.reduce(function(s,d){ return s + (projDebtSelected[d.id]!==false ? d.cuota : 0); }, 0);
-    var restante = ingreso - fixedTotal - debtsTotal;
-
-    var html = '<div class="section-title">Proyección de la próxima quincena</div>';
-    html += '<div class="proj-card">';
-    html += '<div class="field-label" style="margin-top:0;">'+quincenaLabel(nextKey)+'</div>';
-    html += '<div class="proj-input-row"><span style="font-size:13px; color:var(--text-muted); flex:1;">Clientes activos que proyectas</span>'
-      + '<div class="proj-stepper">'
-        + '<button type="button" data-action="proj-dec">−</button>'
-        + '<input type="number" inputmode="numeric" id="proj-clientes-input" value="'+clientes+'" />'
-        + '<button type="button" data-action="proj-inc">+</button>'
-      + '</div></div>';
-    html += '<div class="proj-row"><span>Ingreso estimado</span><span class="amt-income" style="font-weight:700;">'+fmtCOP(ingreso)+'</span></div>';
-    html += '<div class="proj-row"><span>Gastos fijos de esa quincena</span><span class="amt-expense" style="font-weight:700;">'+fmtCOP(fixedTotal)+'</span></div>';
-    if(debtsWithCuota.length>0){
-      html += '<div class="field-label">Cuotas de deudas que aplican</div>';
-      debtsWithCuota.forEach(function(d){
-        var on = projDebtSelected[d.id]!==false;
-        html += '<div class="proj-debt-toggle"><span style="font-size:13px;">'+escapeHTML(d.name)+' ('+fmtCOP(d.cuota)+')</span>'
-          + '<button type="button" class="fixed-check'+(on?' checked':'')+'" style="width:22px;height:22px;" data-action="proj-toggle-debt" data-id="'+d.id+'">'+(on?CHECK_ICON:'')+'</button></div>';
-      });
-    }
-    html += '<div class="proj-total"><span class="lbl">Te quedaría libre</span><span class="val '+(restante<0?'amt-expense':'amt-income')+'">'+fmtCOP(restante)+'</span></div>';
-    html += '<div class="field-help">Esto es un cálculo para planear. No registra ningún movimiento real.</div>';
-    html += '</div>';
     return html;
   }
 
@@ -687,13 +639,6 @@ body{
     if(modalOpen){
       var amountInput = document.getElementById('input-amount');
       if(amountInput) amountInput.focus();
-    }
-    var projInput = document.getElementById('proj-clientes-input');
-    if(projInput){
-      projInput.addEventListener('change', function(){
-        projClientes = parseFloat(projInput.value) || 0;
-        render();
-      });
     }
   }
 
@@ -954,9 +899,6 @@ body{
     else if(action==='toggle-fixed') toggleFixed(id);
     else if(action==='edit-fixed') openFixedEdit(id);
     else if(action==='delete-fixed-swipe') deleteFixed(id);
-    else if(action==='proj-inc'){ projClientes = (projClientes==null?(state.lastClientCount||0):projClientes) + 1; render(); }
-    else if(action==='proj-dec'){ projClientes = Math.max(0, (projClientes==null?(state.lastClientCount||0):projClientes) - 1); render(); }
-    else if(action==='proj-toggle-debt'){ projDebtSelected[id] = (projDebtSelected[id]===false) ? true : false; render(); }
     else if(action==='open-debt-new') openDebtNew();
     else if(action==='open-debt-pay') openDebtPay(id);
     else if(action==='ask-delete-debt'){ confirmDelete={type:'debt',id:id}; render(); }
