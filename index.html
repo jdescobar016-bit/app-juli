@@ -243,12 +243,10 @@ body{
   function quincenaKeyForDate(iso){
     var d = new Date(iso+'T00:00:00');
     var day = d.getDate(), y = d.getFullYear(), m = d.getMonth()+1;
-    if(day>=6 && day<=20) return y+'-'+pad(m)+'-20';
-    if(day>=21){
-      var nm=m+1, ny=y; if(nm>12){ nm=1; ny=y+1; }
-      return ny+'-'+pad(nm)+'-05';
-    }
-    return y+'-'+pad(m)+'-05';
+    if(day>=5 && day<=19) return y+'-'+pad(m)+'-05';
+    if(day>=20) return y+'-'+pad(m)+'-20';
+    var pm=m-1, py=y; if(pm<1){ pm=12; py=y-1; }
+    return py+'-'+pad(pm)+'-20';
   }
   function currentQuincenaKey(){ return quincenaKeyForDate(todayISO()); }
   function quincenaLabel(key){
@@ -436,14 +434,15 @@ body{
   }
 
   function fijosContent(){
-    var key = currentQuincenaKey();
+    var key = viewingQuincena;
     var items = state.fixedExpenses.filter(function(i){ return fixedAppliesTo(i,key); });
     var total = items.reduce(function(s,i){ return s+i.amount; }, 0);
     var paid = items.reduce(function(s,i){ return s + (fixedIsPaid(i,key)? i.amount : 0); }, 0);
     var pct = total>0 ? Math.min(100, Math.round(paid/total*100)) : 0;
 
-    var html = '<div class="fixed-summary">'
-      + '<div class="stat-label">'+quincenaLabel(key)+'</div>'
+    var html = quincenaNavHTML(key);
+
+    html += '<div class="fixed-summary">'
       + '<div class="fixed-summary-row" style="margin-top:6px;"><span class="paid">'+fmtCOP(paid)+'</span><span class="of">de '+fmtCOP(total)+' pagados</span></div>'
       + '<div class="progress-track"><div class="progress-fill" style="width:'+pct+'%"></div></div>'
       + '</div>';
@@ -607,6 +606,7 @@ body{
       tabButtons[i].addEventListener('click', function(e){
         currentTab = e.currentTarget.getAttribute('data-tab');
         confirmDelete = null;
+        viewingQuincena = currentQuincenaKey();
         render();
       });
     }
@@ -709,7 +709,7 @@ body{
   function toggleFixed(id){
     var item = state.fixedExpenses.filter(function(i){ return i.id===id; })[0];
     if(!item) return;
-    var key = currentQuincenaKey();
+    var key = viewingQuincena;
     if(!state.fixedPaid[key]) state.fixedPaid[key] = {};
     if(state.fixedPaid[key][id]) delete state.fixedPaid[key][id];
     else state.fixedPaid[key][id] = true;
@@ -860,6 +860,22 @@ body{
       });
     }
   });
+
+  // En iPhone, una app instalada en la pantalla de inicio a veces queda "congelada"
+  // en segundo plano en vez de cerrarse del todo. Cuando vuelve a abrirse, nos
+  // aseguramos de que siempre muestre la quincena de hoy, nunca una vieja.
+  function resyncToCurrentQuincena(){
+    var fresh = currentQuincenaKey();
+    if(viewingQuincena !== fresh){
+      viewingQuincena = fresh;
+      render();
+    }
+  }
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState === 'visible') resyncToCurrentQuincena();
+  });
+  window.addEventListener('pageshow', function(){ resyncToCurrentQuincena(); });
+  window.addEventListener('focus', function(){ resyncToCurrentQuincena(); });
 
   render();
 })();
